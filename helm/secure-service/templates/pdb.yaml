@@ -1,0 +1,6 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "secure-service.fullname" . }}
+spec:
+  minAvailable: 1

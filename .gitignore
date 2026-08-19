@@ -1,0 +1,24 @@
+__pycache__/
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.env
+.idea/
+.vscode/
+.envrc
+.DS_Store
+
+# Docker
+docker-compose.yml
+**/node_modules/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+
+# Python virtual env
+venv/
