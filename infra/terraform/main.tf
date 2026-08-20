@@ -31,7 +31,8 @@ resource "azurerm_key_vault" "kv" {
   name                        = var.key_vault_name
   location                    = azurerm_resource_group.rg.location
   resource_group_name         = azurerm_resource_group.rg.name
-  tenant_id                   = "00000000-0000-0000-0000-000000000000"
+  # tenant_id should be provided by variable or CI/CD; do NOT hardcode tenant identifiers in public examples.
+  tenant_id                   = var.tenant_id
   sku_name                    = "standard"
   soft_delete_retention_days  = 7
 }
