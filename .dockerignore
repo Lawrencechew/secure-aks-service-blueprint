@@ -7,3 +7,14 @@ venv
 Dockerfile*
 *.db
 *.sqlite3
+.pytest_cache/
+__pycache__/
+.terraform/
+.terraform.lock.hcl
+.vscode/
+.idea/
+*.log
+*.env
+dist/
+build/
+*.egg-info/

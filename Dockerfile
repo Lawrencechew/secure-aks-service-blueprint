@@ -30,6 +30,6 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s CMD ["/bin/sh", "-c", "curl -f http://localhost:8080/health || exit 1"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s CMD ["python", "-c", "import sys,urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health'); sys.exit(0)"]
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -40,6 +40,10 @@ spec:
             runAsNonRoot: {{ .Values.containerSecurityContext.runAsNonRoot }}
             allowPrivilegeEscalation: {{ .Values.containerSecurityContext.allowPrivilegeEscalation }}
             readOnlyRootFilesystem: {{ .Values.containerSecurityContext.readOnlyRootFilesystem }}
+            capabilities:
+              drop: {{ toYaml .Values.containerSecurityContext.capabilities.drop | nindent 14 }}
+            seccompProfile:
+              type: {{ .Values.containerSecurityContext.seccompProfile.type }}
           livenessProbe:
             httpGet:
               path: {{ .Values.livenessProbe.httpGet.path }}
