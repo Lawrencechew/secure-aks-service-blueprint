@@ -62,3 +62,13 @@ Reference manifests for local policy verification are provided in:
 - [examples/violations/](/C:/Dev/secure-aks-service-blueprint/examples/violations)
 
 The implementation-focused workload contract is documented at [platform/workload-contract/README.md](/C:/Dev/secure-aks-service-blueprint/platform/workload-contract/README.md).
+
+## SRE SLIs, SLOs, and burn-rate alerting (Phase 3)
+
+Phase 3 SRE artifacts:
+
+- SRE model and exact SLI/SLO PromQL: [docs/sre-phase3.md](/C:/Dev/secure-aks-service-blueprint/docs/sre-phase3.md)
+- Reliability runbook: [docs/reliability-runbook.md](/C:/Dev/secure-aks-service-blueprint/docs/reliability-runbook.md)
+- Reliability drills and rollback model: [docs/reliability-drills.md](/C:/Dev/secure-aks-service-blueprint/docs/reliability-drills.md)
+- Recording/alerting rules: [platform/sre/prometheus/slo-rules.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-rules.yaml)
+- Prometheus rule tests: [platform/sre/prometheus/slo-alert-tests.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-alert-tests.yaml)

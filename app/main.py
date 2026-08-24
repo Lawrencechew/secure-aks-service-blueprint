@@ -1,11 +1,12 @@
 import uuid
+from time import perf_counter
 
 import uvicorn
 from fastapi import FastAPI, Request
 
 from app.config import settings
 from app.logging import configure_logging, logger
-from app.observability import instrument_app
+from app.observability import instrument_app, track_request_metrics
 from app.routes import health, info, metrics, ready
 
 app = FastAPI(title=settings.service_name)
@@ -13,6 +14,7 @@ app = FastAPI(title=settings.service_name)
 
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
+    start_time = perf_counter()
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id
     logger.info(
@@ -23,6 +25,18 @@ async def add_request_id(request: Request, call_next):
     )
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+    route = request.scope.get("route")
+    endpoint = (
+        route.path
+        if route is not None and hasattr(route, "path")
+        else "__unmatched__"
+    )
+    track_request_metrics(
+        method=request.method,
+        endpoint=endpoint,
+        http_status=response.status_code,
+        start_time=start_time,
+    )
     logger.info("request.end", status_code=response.status_code, request_id=request_id)
     return response
 

@@ -10,6 +10,7 @@ High-level components:
 - Workload identity links Kubernetes ServiceAccount -> Azure managed identity
 - Azure Key Vault optionally used via Secrets Store CSI Driver
 - Observability via Prometheus-compatible `/metrics` and optional OpenTelemetry export
+- GitOps deployment intent via Argo CD Application manifest
 
 Terraform v2 structure:
 
@@ -32,3 +33,4 @@ Design notes:
 
 - Networking and enterprise controls are intentionally minimal to keep the reference focused on workload identity, secrets integration, CI/CD and supply-chain controls.
 - Real deployments should add network isolation, private endpoints, and additional policy controls as required by your organisation.
+- Monitoring integration resources (ServiceMonitor/PrometheusRule) are rendered through the Helm chart and expected to be reconciled through GitOps.

@@ -1,0 +1,90 @@
+rule_files:
+  - slo-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: healthy-traffic-no-alert
+    interval: 1m
+    input_series:
+      - series: app_requests_total{method="GET",endpoint="/",http_status="200"}
+        values: 0+100x240
+      - series: app_requests_total{method="GET",endpoint="/health",http_status="200"}
+        values: 0+50x240
+      - series: app_request_latency_seconds_bucket{method="GET",endpoint="/",le="0.5"}
+        values: 0+100x240
+      - series: app_request_latency_seconds_count{method="GET",endpoint="/"}
+        values: 0+100x240
+    alert_rule_test:
+      - eval_time: 200m
+        alertname: SecureServiceErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 200m
+        alertname: SecureServiceErrorBudgetSlowBurn
+        exp_alerts: []
+
+  - name: fast-burn-critical
+    interval: 1m
+    input_series:
+      - series: app_requests_total{method="GET",endpoint="/",http_status="200"}
+        values: 0+80x240
+      - series: app_requests_total{method="GET",endpoint="/",http_status="500"}
+        values: 0+20x240
+      - series: app_request_latency_seconds_bucket{method="GET",endpoint="/",le="0.5"}
+        values: 0+100x240
+      - series: app_request_latency_seconds_count{method="GET",endpoint="/"}
+        values: 0+100x240
+    alert_rule_test:
+      - eval_time: 200m
+        alertname: SecureServiceErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              slo: availability-99.9
+            exp_annotations:
+              summary: secure-service fast error budget burn
+              description: Error budget burn is critically high over both 5m and 30m windows.
+
+  - name: sustained-moderate-slow-burn
+    interval: 1m
+    input_series:
+      - series: app_requests_total{method="GET",endpoint="/",http_status="200"}
+        values: 0+995x240
+      - series: app_requests_total{method="GET",endpoint="/",http_status="500"}
+        values: 0+5x240
+      - series: app_request_latency_seconds_bucket{method="GET",endpoint="/",le="0.5"}
+        values: 0+1000x240
+      - series: app_request_latency_seconds_count{method="GET",endpoint="/"}
+        values: 0+1000x240
+    alert_rule_test:
+      - eval_time: 220m
+        alertname: SecureServiceErrorBudgetSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              slo: availability-99.9
+            exp_annotations:
+              summary: secure-service sustained error budget burn
+              description: Error budget burn is elevated over 30m and 2h windows.
+      - eval_time: 220m
+        alertname: SecureServiceErrorBudgetFastBurn
+        exp_alerts: []
+
+  - name: recovery-clears-alerts
+    interval: 1m
+    input_series:
+      - series: app_requests_total{method="GET",endpoint="/",http_status="200"}
+        values: 0+80x60 4800+100x180
+      - series: app_requests_total{method="GET",endpoint="/",http_status="500"}
+        values: 0+20x60 1200+0x180
+      - series: app_request_latency_seconds_bucket{method="GET",endpoint="/",le="0.5"}
+        values: 0+100x240
+      - series: app_request_latency_seconds_count{method="GET",endpoint="/"}
+        values: 0+100x240
+    alert_rule_test:
+      - eval_time: 239m
+        alertname: SecureServiceErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 239m
+        alertname: SecureServiceErrorBudgetSlowBurn
+        exp_alerts: []

@@ -65,3 +65,24 @@ workloadIdentity:
   clientID: ""
 
 labels: {}
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+  prometheusRule:
+    enabled: true
+  slo:
+    availabilityObjectivePercent: 99.9
+    latencyObjectivePercent: 95
+    latencyThresholdSeconds: "0.5"
+    errorBudgetRatio: "0.001"
+    excludedEndpointsRegex: "^/(health|ready|metrics)$"
+  alerts:
+    fastBurn:
+      threshold: "14.4"
+      for: 2m
+    slowBurn:
+      threshold: "3"
+      for: 15m

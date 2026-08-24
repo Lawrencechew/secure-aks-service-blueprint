@@ -24,6 +24,10 @@ def test_ready():
 
 
 def test_metrics():
+    client.get("/")
+    client.get("/health")
     r = client.get("/metrics")
     assert r.status_code == 200
     assert "process_cpu_seconds_total" in r.text or r.text
+    assert "app_requests_total" in r.text
+    assert "app_request_latency_seconds_bucket" in r.text

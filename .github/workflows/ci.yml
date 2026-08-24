@@ -95,3 +95,22 @@ jobs:
       - name: Run Kyverno policy tests (blocking)
         run: |
           docker run --rm -v "${{ github.workspace }}:/work" -w /work ghcr.io/kyverno/kyverno-cli:v1.12.6 test platform/policies/tests
+  sre-validation:
+    runs-on: ubuntu-latest
+    needs: policy-guardrails
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prometheus rule syntax check (blocking)
+        run: |
+          docker run --rm --entrypoint promtool -v "${{ github.workspace }}:/work" -w /work prom/prometheus:v2.55.0 check rules platform/sre/prometheus/slo-rules.yaml
+      - name: Prometheus alert behavior tests (blocking)
+        run: |
+          docker run --rm --entrypoint promtool -v "${{ github.workspace }}:/work" -w /work prom/prometheus:v2.55.0 test rules platform/sre/prometheus/slo-alert-tests.yaml
+      - name: Validate GitOps manifests (blocking)
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/work" -w /work ghcr.io/yannh/kubeconform:v0.6.7 -strict -ignore-missing-schemas gitops/argocd/applications/secure-service.yaml
+      - name: Ensure Helm renders monitoring resources
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/work" -w /work alpine/helm:3.16.3 template secure-service helm/secure-service > rendered.yaml
+          grep -q "kind: ServiceMonitor" rendered.yaml
+          grep -q "kind: PrometheusRule" rendered.yaml

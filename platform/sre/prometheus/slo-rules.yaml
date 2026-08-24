@@ -1,0 +1,75 @@
+groups:
+  - name: secure-service-sli-recordings
+    interval: 30s
+    rules:
+      - record: secure_service:request_rate:5m
+        expr: |
+          sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$"}[5m]))
+
+      - record: secure_service:error_rate:5m
+        expr: |
+          sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$",http_status=~"5.."}[5m]))
+
+      - record: secure_service:error_ratio:5m
+        expr: |
+          secure_service:error_rate:5m / secure_service:request_rate:5m
+
+      - record: secure_service:availability_ratio:5m
+        expr: |
+          1 - secure_service:error_ratio:5m
+
+      - record: secure_service:latency_sli_500ms_ratio:5m
+        expr: |
+          sum(rate(app_request_latency_seconds_bucket{endpoint!~"^/(health|ready|metrics)$",le="0.5"}[5m]))
+          /
+          sum(rate(app_request_latency_seconds_count{endpoint!~"^/(health|ready|metrics)$"}[5m]))
+
+      - record: secure_service:error_budget_burn_rate:5m
+        expr: |
+          secure_service:error_ratio:5m / 0.001
+
+      - record: secure_service:error_budget_burn_rate:30m
+        expr: |
+          (
+            sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$",http_status=~"5.."}[30m]))
+            /
+            sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$"}[30m]))
+          ) / 0.001
+
+      - record: secure_service:error_budget_burn_rate:2h
+        expr: |
+          (
+            sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$",http_status=~"5.."}[2h]))
+            /
+            sum(rate(app_requests_total{endpoint!~"^/(health|ready|metrics)$"}[2h]))
+          ) / 0.001
+
+  - name: secure-service-slo-alerts
+    interval: 30s
+    rules:
+      - alert: SecureServiceErrorBudgetFastBurn
+        expr: |
+          secure_service:error_budget_burn_rate:5m > 14.4
+          and
+          secure_service:error_budget_burn_rate:30m > 14.4
+        for: 2m
+        labels:
+          severity: critical
+          slo: availability-99.9
+        annotations:
+          summary: "secure-service fast error budget burn"
+          description: "Error budget burn is critically high over both 5m and 30m windows."
+
+      - alert: SecureServiceErrorBudgetSlowBurn
+        expr: |
+          secure_service:error_budget_burn_rate:30m > 3
+          and
+          secure_service:error_budget_burn_rate:2h > 3
+        for: 15m
+        labels:
+          severity: warning
+          slo: availability-99.9
+        annotations:
+          summary: "secure-service sustained error budget burn"
+          description: "Error budget burn is elevated over 30m and 2h windows."
+

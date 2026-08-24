@@ -1,3 +1,5 @@
+from time import perf_counter
+
 from fastapi import Response
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -28,3 +30,12 @@ def instrument_app(app, enable_otlp: bool = False, otlp_endpoint: str | None = N
 def metrics_endpoint() -> Response:
     data = generate_latest()
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+
+def track_request_metrics(method: str, endpoint: str, http_status: int, start_time: float):
+    REQUEST_COUNT.labels(
+        method=method, endpoint=endpoint, http_status=str(http_status)
+    ).inc()
+    REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(
+        perf_counter() - start_time
+    )

@@ -1,0 +1,76 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "secure-service.fullname" . }}-slo
+  labels:
+    app.kubernetes.io/name: {{ include "secure-service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  groups:
+    - name: secure-service-sli-recordings
+      interval: 30s
+      rules:
+        - record: secure_service:request_rate:5m
+          expr: |
+            sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}"}[5m]))
+        - record: secure_service:error_rate:5m
+          expr: |
+            sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}",http_status=~"5.."}[5m]))
+        - record: secure_service:error_ratio:5m
+          expr: |
+            secure_service:error_rate:5m / secure_service:request_rate:5m
+        - record: secure_service:availability_ratio:5m
+          expr: |
+            1 - secure_service:error_ratio:5m
+        - record: secure_service:latency_sli_500ms_ratio:5m
+          expr: |
+            sum(rate(app_request_latency_seconds_bucket{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}",le="{{ .Values.monitoring.slo.latencyThresholdSeconds }}"}[5m]))
+            /
+            sum(rate(app_request_latency_seconds_count{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}"}[5m]))
+        - record: secure_service:error_budget_burn_rate:5m
+          expr: |
+            secure_service:error_ratio:5m / {{ .Values.monitoring.slo.errorBudgetRatio }}
+        - record: secure_service:error_budget_burn_rate:30m
+          expr: |
+            (
+              sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}",http_status=~"5.."}[30m]))
+              /
+              sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}"}[30m]))
+            ) / {{ .Values.monitoring.slo.errorBudgetRatio }}
+        - record: secure_service:error_budget_burn_rate:2h
+          expr: |
+            (
+              sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}",http_status=~"5.."}[2h]))
+              /
+              sum(rate(app_requests_total{endpoint!~"{{ .Values.monitoring.slo.excludedEndpointsRegex }}"}[2h]))
+            ) / {{ .Values.monitoring.slo.errorBudgetRatio }}
+    - name: secure-service-slo-alerts
+      interval: 30s
+      rules:
+        - alert: SecureServiceErrorBudgetFastBurn
+          expr: |
+            secure_service:error_budget_burn_rate:5m > {{ .Values.monitoring.alerts.fastBurn.threshold }}
+            and
+            secure_service:error_budget_burn_rate:30m > {{ .Values.monitoring.alerts.fastBurn.threshold }}
+          for: {{ .Values.monitoring.alerts.fastBurn.for }}
+          labels:
+            severity: critical
+            slo: availability-99.9
+          annotations:
+            summary: secure-service fast error budget burn
+            description: Error budget burn is critically high over both 5m and 30m windows.
+        - alert: SecureServiceErrorBudgetSlowBurn
+          expr: |
+            secure_service:error_budget_burn_rate:30m > {{ .Values.monitoring.alerts.slowBurn.threshold }}
+            and
+            secure_service:error_budget_burn_rate:2h > {{ .Values.monitoring.alerts.slowBurn.threshold }}
+          for: {{ .Values.monitoring.alerts.slowBurn.for }}
+          labels:
+            severity: warning
+            slo: availability-99.9
+          annotations:
+            summary: secure-service sustained error budget burn
+            description: Error budget burn is elevated over 30m and 2h windows.
+{{- end }}
+
