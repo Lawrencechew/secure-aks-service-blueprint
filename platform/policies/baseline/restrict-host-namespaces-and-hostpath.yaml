@@ -1,0 +1,54 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-host-namespaces-and-hostpath
+  annotations:
+    policies.kyverno.io/title: Restrict host namespaces and hostPath
+    policies.kyverno.io/category: baseline
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: host-namespaces-forbidden
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: hostNetwork, hostPID, and hostIPC are forbidden for application workloads.
+        pattern:
+          spec:
+            =(hostNetwork): false
+            =(hostPID): false
+            =(hostIPC): false
+
+    - name: hostpath-volumes-forbidden
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: hostPath volumes are forbidden for application workloads.
+        foreach:
+          - list: request.object.spec.volumes[] || []
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.hostPath.path || '' }}"
+                    operator: NotEquals
+                    value: ""
+

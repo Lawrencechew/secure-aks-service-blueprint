@@ -1,0 +1,110 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: secure-aks-policy-tests
+policies:
+  - ../baseline/disallow-privileged-and-escalation.yaml
+  - ../baseline/require-security-context.yaml
+  - ../baseline/restrict-host-namespaces-and-hostpath.yaml
+  - ../baseline/require-resources.yaml
+  - ../supply-chain/approved-registry.yaml
+  - ../supply-chain/disallow-latest-tag.yaml
+  - ../workload-contract/required-labels-and-serviceaccount.yaml
+  - ../workload-contract/required-probes.yaml
+resources:
+  - ../../../examples/compliant/deployment.yaml
+  - ../../../examples/violations/privileged-container.yaml
+  - ../../../examples/violations/latest-tag.yaml
+  - ../../../examples/violations/unapproved-registry.yaml
+  - ../../../examples/violations/missing-resources.yaml
+  - ../../../examples/violations/hostpath-volume.yaml
+  - ../../../examples/violations/missing-security-context.yaml
+  - ../../../examples/violations/missing-ownership-label.yaml
+  - ../../../examples/violations/host-network.yaml
+results:
+  - policy: disallow-privileged-and-escalation
+    rule: privileged-containers-forbidden
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: require-security-context
+    rule: containers-must-run-non-root-readonly-drop-all
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: restrict-host-namespaces-and-hostpath
+    rule: host-namespaces-forbidden
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: require-resources
+    rule: requests-and-limits-required
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: approved-registry-only
+    rule: approved-acr-registry-required
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: disallow-latest-tag
+    rule: latest-tag-forbidden
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: workload-contract-labels-and-serviceaccount
+    rule: ownership-labels-required
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: workload-contract-labels-and-serviceaccount
+    rule: serviceaccount-required
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: workload-contract-required-probes
+    rule: probes-required-for-deployments
+    resource: secure-service-compliant
+    kind: Deployment
+    result: pass
+  - policy: disallow-privileged-and-escalation
+    rule: privileged-containers-forbidden
+    resource: violation-privileged
+    kind: Deployment
+    result: fail
+  - policy: disallow-latest-tag
+    rule: latest-tag-forbidden
+    resource: violation-latest-tag
+    kind: Deployment
+    result: fail
+  - policy: approved-registry-only
+    rule: approved-acr-registry-required
+    resource: violation-unapproved-registry
+    kind: Deployment
+    result: fail
+  - policy: require-resources
+    rule: requests-and-limits-required
+    resource: violation-missing-resources
+    kind: Deployment
+    result: fail
+  - policy: restrict-host-namespaces-and-hostpath
+    rule: hostpath-volumes-forbidden
+    resource: violation-hostpath-volume
+    kind: Deployment
+    result: fail
+  - policy: require-security-context
+    rule: containers-must-run-non-root-readonly-drop-all
+    resource: violation-missing-security-context
+    kind: Deployment
+    result: fail
+  - policy: workload-contract-labels-and-serviceaccount
+    rule: ownership-labels-required
+    resource: violation-missing-ownership-label
+    kind: Deployment
+    result: fail
+  - policy: restrict-host-namespaces-and-hostpath
+    rule: host-namespaces-forbidden
+    resource: violation-host-network
+    kind: Deployment
+    result: fail
+

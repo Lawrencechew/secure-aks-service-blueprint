@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow latest image tag
+    policies.kyverno.io/category: supply-chain
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: latest-tag-forbidden
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: latest image tags are not allowed.
+        foreach:
+          - list: request.object.spec.containers[]
+            deny:
+              conditions:
+                any:
+                  - key: "{{ regex_match('^.+:latest$', element.image) }}"
+                    operator: Equals
+                    value: true
+          - list: request.object.spec.initContainers[] || []
+            deny:
+              conditions:
+                any:
+                  - key: "{{ regex_match('^.+:latest$', element.image) }}"
+                    operator: Equals
+                    value: true
+

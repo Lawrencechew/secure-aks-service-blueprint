@@ -1,0 +1,65 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-and-escalation
+  annotations:
+    policies.kyverno.io/title: Disallow privileged and privilege escalation
+    policies.kyverno.io/category: baseline
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: privileged-containers-forbidden
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: Privileged containers are not allowed.
+        foreach:
+          - list: request.object.spec.containers[]
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.privileged || false }}"
+                    operator: Equals
+                    value: true
+          - list: request.object.spec.initContainers[] || []
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.privileged || false }}"
+                    operator: Equals
+                    value: true
+
+    - name: privilege-escalation-must-be-false
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: allowPrivilegeEscalation must be false for all containers.
+        foreach:
+          - list: request.object.spec.containers[]
+            pattern:
+              securityContext:
+                allowPrivilegeEscalation: false
+          - list: request.object.spec.initContainers[] || []
+            pattern:
+              securityContext:
+                allowPrivilegeEscalation: false
+

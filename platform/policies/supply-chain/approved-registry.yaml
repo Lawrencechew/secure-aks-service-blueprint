@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: approved-registry-only
+  annotations:
+    policies.kyverno.io/title: Restrict to approved registry
+    policies.kyverno.io/category: supply-chain
+    platform.secure-aks.io/approved-registry-default: example.azurecr.io
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: approved-acr-registry-required
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      context:
+        - name: approvedRegistry
+          variable:
+            value: example.azurecr.io
+      validate:
+        message: Images must come from the approved registry.
+        foreach:
+          - list: request.object.spec.containers[]
+            pattern:
+              image: "{{ approvedRegistry }}/*"
+          - list: request.object.spec.initContainers[] || []
+            pattern:
+              image: "{{ approvedRegistry }}/*"
+

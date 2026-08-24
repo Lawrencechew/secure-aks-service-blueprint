@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: violation-missing-security-context
+  namespace: default
+  labels:
+    platform.secure-aks.io/service: secure-service
+    platform.secure-aks.io/owner: platform-team
+    platform.secure-aks.io/environment: dev
+spec:
+  selector:
+    matchLabels:
+      app: violation-missing-security-context
+  template:
+    metadata:
+      labels:
+        app: violation-missing-security-context
+        platform.secure-aks.io/service: secure-service
+        platform.secure-aks.io/owner: platform-team
+        platform.secure-aks.io/environment: dev
+    spec:
+      serviceAccountName: secure-service
+      containers:
+        - name: app
+          image: example.azurecr.io/secure-service:v1.2.3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+

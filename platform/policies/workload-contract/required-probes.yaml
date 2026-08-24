@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: workload-contract-required-probes
+  annotations:
+    policies.kyverno.io/title: Require liveness/readiness probes for long-running workloads
+    policies.kyverno.io/category: workload-contract
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: probes-required-for-deployments
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: Long-running workloads must define liveness and readiness probes for each container.
+        foreach:
+          - list: request.object.spec.template.spec.containers[]
+            pattern:
+              livenessProbe:
+                httpGet:
+                  path: "?*"
+                  port: "?*"
+              readinessProbe:
+                httpGet:
+                  path: "?*"
+                  port: "?*"

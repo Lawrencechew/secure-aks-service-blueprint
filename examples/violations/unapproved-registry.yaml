@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: violation-unapproved-registry
+  namespace: default
+  labels:
+    platform.secure-aks.io/service: secure-service
+    platform.secure-aks.io/owner: platform-team
+    platform.secure-aks.io/environment: dev
+spec:
+  selector:
+    matchLabels:
+      app: violation-unapproved-registry
+  template:
+    metadata:
+      labels:
+        app: violation-unapproved-registry
+        platform.secure-aks.io/service: secure-service
+        platform.secure-aks.io/owner: platform-team
+        platform.secure-aks.io/environment: dev
+    spec:
+      serviceAccountName: secure-service
+      containers:
+        - name: app
+          image: docker.io/library/nginx:1.27.0
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+

@@ -1,0 +1,43 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-security-context
+  annotations:
+    policies.kyverno.io/title: Require secure container settings
+    policies.kyverno.io/category: baseline
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: containers-must-run-non-root-readonly-drop-all
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+      validate:
+        message: Containers must run as non-root, use read-only root filesystem, and drop ALL capabilities.
+        foreach:
+          - list: request.object.spec.containers[]
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+          - list: request.object.spec.initContainers[] || []
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+

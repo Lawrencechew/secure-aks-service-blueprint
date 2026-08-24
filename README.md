@@ -47,3 +47,18 @@ The OIDC plan/apply design is implemented in [.github/workflows/infra-oidc.yml](
 - Manual/protected execution: Terraform `apply` via `workflow_dispatch`
 
 See [docs/deployment.md](/C:/Dev/secure-aks-service-blueprint/docs/deployment.md) and [docs/security.md](/C:/Dev/secure-aks-service-blueprint/docs/security.md) for run procedures and security details.
+
+## Policy guardrails and workload contract (Phase 2)
+
+Kyverno-based policy-as-code is implemented under [platform/policies/](/C:/Dev/secure-aks-service-blueprint/platform/policies):
+
+- Baseline runtime hardening policies
+- Supply-chain image policies
+- Workload contract enforcement policies
+
+Reference manifests for local policy verification are provided in:
+
+- [examples/compliant/](/C:/Dev/secure-aks-service-blueprint/examples/compliant)
+- [examples/violations/](/C:/Dev/secure-aks-service-blueprint/examples/violations)
+
+The implementation-focused workload contract is documented at [platform/workload-contract/README.md](/C:/Dev/secure-aks-service-blueprint/platform/workload-contract/README.md).

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: violation-missing-resources
+  namespace: default
+  labels:
+    platform.secure-aks.io/service: secure-service
+    platform.secure-aks.io/owner: platform-team
+    platform.secure-aks.io/environment: dev
+spec:
+  selector:
+    matchLabels:
+      app: violation-missing-resources
+  template:
+    metadata:
+      labels:
+        app: violation-missing-resources
+        platform.secure-aks.io/service: secure-service
+        platform.secure-aks.io/owner: platform-team
+        platform.secure-aks.io/environment: dev
+    spec:
+      serviceAccountName: secure-service
+      containers:
+        - name: app
+          image: example.azurecr.io/secure-service:v1.2.3
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+
