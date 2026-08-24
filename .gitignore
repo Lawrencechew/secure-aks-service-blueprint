@@ -19,6 +19,11 @@ docker-compose.yml
 # Terraform
 .terraform/
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+backend.hcl
+*.auto.tfvars
 
 # Python virtual env
 venv/

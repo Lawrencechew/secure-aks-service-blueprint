@@ -62,5 +62,6 @@ keyVault:
 workloadIdentity:
   enabled: false
   serviceAccountName: ""
+  clientID: ""
 
 labels: {}

@@ -1,0 +1,90 @@
+name: Infra OIDC Plan/Apply
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/infra-oidc.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Terraform environment to target"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - dev
+          - prod
+      apply:
+        description: "Run terraform apply (manual/protected only)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Azure login with OIDC (no client secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform init (backend disabled)
+        run: terraform -chdir=infra/terraform/environments/dev init -backend=false
+
+      - name: Terraform plan (dev)
+        run: terraform -chdir=infra/terraform/environments/dev plan -input=false -lock=false -out=tfplan -var-file terraform.tfvars.example
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-dev-plan
+          path: infra/terraform/environments/dev/tfplan
+
+  apply:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: prod-infra
+    env:
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Azure login with OIDC (no client secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform init (backend disabled)
+        run: terraform -chdir=infra/terraform/environments/${{ github.event.inputs.environment }} init -backend=false
+
+      - name: Terraform plan (selected environment)
+        run: terraform -chdir=infra/terraform/environments/${{ github.event.inputs.environment }} plan -input=false -lock=false -out=tfplan -var-file terraform.tfvars.example
+
+      - name: Terraform apply (manual/protected execution)
+        run: terraform -chdir=infra/terraform/environments/${{ github.event.inputs.environment }} apply -input=false -auto-approve tfplan

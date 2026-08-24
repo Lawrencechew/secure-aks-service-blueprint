@@ -1,0 +1,5 @@
+location                    = "eastus"
+resource_group_name         = "rg-sasb-tfstate"
+storage_account_name_prefix = "sasbtfstate"
+container_name              = "tfstate"
+

@@ -1,0 +1,21 @@
+location                 = "eastus"
+environment              = "dev"
+resource_group_name      = "rg-sasb-dev"
+acr_name                 = "sasbdevacr001"
+aks_name                 = "aks-sasb-dev"
+aks_dns_prefix           = "aks-sasb-dev"
+key_vault_name           = "kv-sasb-dev-001"
+uami_name                = "uami-sasb-dev"
+federated_credential_name = "secure-service-fic-dev"
+k8s_namespace            = "default"
+k8s_service_account_name = "secure-service"
+acr_sku                  = "Basic"
+acr_admin_enabled        = false
+aks_node_count           = 2
+aks_node_vm_size         = "Standard_DS2_v2"
+aks_api_server_authorized_ip_ranges = ["10.0.0.0/24"]
+key_vault_soft_delete_retention_days = 7
+key_vault_purge_protection_enabled   = true
+tags = {
+  owner = "platform-team"
+}

@@ -1,0 +1,5 @@
+resource_group_name  = "rg-sasb-tfstate"
+storage_account_name = "sasbtfstatexxxxx"
+container_name       = "tfstate"
+key                  = "secure-aks-service-blueprint/dev.tfstate"
+

@@ -1,5 +1,0 @@
-location = "eastus"
-resource_group_name = "secure-aks-rg"
-acr_name = "<your-acr-name>"
-aks_cluster_name = "<your-aks-name>"
-key_vault_name = "<your-key-vault-name>"

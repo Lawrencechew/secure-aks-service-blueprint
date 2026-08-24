@@ -1,0 +1,21 @@
+location                 = "eastus2"
+environment              = "prod"
+resource_group_name      = "rg-sasb-prod"
+acr_name                 = "sasbprodacr001"
+aks_name                 = "aks-sasb-prod"
+aks_dns_prefix           = "aks-sasb-prod"
+key_vault_name           = "kv-sasb-prod-001"
+uami_name                = "uami-sasb-prod"
+federated_credential_name = "secure-service-fic-prod"
+k8s_namespace            = "default"
+k8s_service_account_name = "secure-service"
+acr_sku                  = "Standard"
+acr_admin_enabled        = false
+aks_node_count           = 3
+aks_node_vm_size         = "Standard_DS3_v2"
+aks_api_server_authorized_ip_ranges = ["10.0.0.0/24"]
+key_vault_soft_delete_retention_days = 30
+key_vault_purge_protection_enabled   = true
+tags = {
+  owner = "platform-team"
+}
