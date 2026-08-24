@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: secure-service
+  name: secure-service-prod
   namespace: argocd
 spec:
   project: default
@@ -11,19 +11,11 @@ spec:
     path: helm/secure-service
     helm:
       releaseName: secure-service
-      values: |
-        workloadIdentity:
-          enabled: true
-          serviceAccountName: secure-service
-        monitoring:
-          enabled: true
-          serviceMonitor:
-            enabled: true
-          prometheusRule:
-            enabled: true
+      valueFiles:
+        - ../../gitops/values/prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: secure-service
+    namespace: secure-service-prod
   syncPolicy:
     automated:
       prune: true

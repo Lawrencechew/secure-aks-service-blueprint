@@ -1,0 +1,19 @@
+image:
+  repository: "<your-acr-login-server>/secure-aks-service"
+  digest: "sha256:replace-with-prod-image-digest"
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+workloadIdentity:
+  enabled: true
+  serviceAccountName: secure-service
+  clientID: "<prod-workload-identity-client-id>"
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+

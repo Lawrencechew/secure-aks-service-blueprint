@@ -2,7 +2,7 @@
 
 This document explains the security controls provided by the blueprint and what additional controls are expected for production.
 
-Implemented controls (v1):
+Implemented controls (application baseline):
 
 - Non-root container user
 - Read-only root filesystem where practical
@@ -24,12 +24,23 @@ Implemented controls (v2 phase 1 IaC):
 - Infrastructure CI includes blocking `terraform validate`, `tflint`, `trivy config`, and `helm lint`
 - GitHub Actions -> Azure authentication design uses OIDC federation (no stored client secret)
 
+Implemented controls (phase 4 hardening):
+
+- CI blocks on HIGH/CRITICAL vulnerabilities for both filesystem and built image scans.
+- CI emits a CycloneDX SBOM artifact for the built image.
+- CI includes a negative-gate check that ensures a known insecure manifest fails Trivy policy evaluation.
+- Vulnerability exceptions are explicit and time-bound:
+  - Technical allowlist: [.trivyignore](/C:/Dev/secure-aks-service-blueprint/.trivyignore)
+  - Governance record: [security/vulnerability-exceptions.yaml](/C:/Dev/secure-aks-service-blueprint/security/vulnerability-exceptions.yaml)
+- GitOps manifests are split by environment with automated sync, prune, and self-heal.
+- Helm supports immutable image references (`repository@sha256:digest`) via `image.digest`.
+
 Controls to add in production:
 
 - Private endpoints for ACR and Key Vault
 - Network isolation and NSGs
 - Centralised secrets/rotation policies
-- Policy enforcement (e.g., Azure Policy, Kyverno)
+- Policy enforcement (for example Azure Policy baseline at cluster level in addition to Kyverno)
 - Container image signing and attestation (Cosign/SLSA)
 
 Notes:

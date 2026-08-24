@@ -72,3 +72,29 @@ Phase 3 SRE artifacts:
 - Reliability drills and rollback model: [docs/reliability-drills.md](/C:/Dev/secure-aks-service-blueprint/docs/reliability-drills.md)
 - Recording/alerting rules: [platform/sre/prometheus/slo-rules.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-rules.yaml)
 - Prometheus rule tests: [platform/sre/prometheus/slo-alert-tests.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-alert-tests.yaml)
+
+## Phase 4 hardening and closeout
+
+### GitOps environment authority
+
+- Environment applications: [gitops/argocd/applications/secure-service-dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-dev.yaml), [gitops/argocd/applications/secure-service-prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-prod.yaml)
+- Environment values: [gitops/values/dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/dev.yaml), [gitops/values/prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/prod.yaml)
+- Sync behavior: automated reconcile with prune + self-heal enabled.
+
+### Supply chain policy hardening
+
+- Blocking vulnerability gates for Trivy filesystem and image scans at HIGH/CRITICAL severity in [.github/workflows/ci.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/ci.yml)
+- SBOM generation remains a mandatory CI artifact (`sbom.xml`, CycloneDX)
+- Negative gate demonstration: CI intentionally verifies that [platform/negative-tests/trivy/insecure-deployment.yaml](/C:/Dev/secure-aks-service-blueprint/platform/negative-tests/trivy/insecure-deployment.yaml) is rejected by Trivy.
+- Exception mechanism:
+  - Technical allowlist: [.trivyignore](/C:/Dev/secure-aks-service-blueprint/.trivyignore)
+  - Review policy: [security/vulnerability-exceptions.yaml](/C:/Dev/secure-aks-service-blueprint/security/vulnerability-exceptions.yaml)
+
+### Immutable image support
+
+- Helm chart supports digest-pinned images (`repository@sha256:digest`) via `image.digest` in [helm/secure-service/values.yaml](/C:/Dev/secure-aks-service-blueprint/helm/secure-service/values.yaml).
+
+### Decision records and operations guide
+
+- ADRs: [docs/adr/](/C:/Dev/secure-aks-service-blueprint/docs/adr)
+- Demo/operations flow: [docs/demo-guide.md](/C:/Dev/secure-aks-service-blueprint/docs/demo-guide.md)

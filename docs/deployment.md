@@ -38,4 +38,25 @@ Use Terraform outputs to configure Helm:
 - `workload_identity_service_account_name` -> `workloadIdentity.serviceAccountName`
 - `acr_login_server` -> image repository prefix
 
+For immutable deployment artifacts, set:
+
+- `image.repository=<acr_login_server>/secure-aks-service`
+- `image.digest=sha256:<built-image-digest>`
+
+Prefer digest pinning over mutable tag-only references for promoted environments.
+
 Deployment via GitHub Actions should use OIDC federation (no client secret). See [.github/workflows/infra-oidc.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/infra-oidc.yml).
+
+## 4) GitOps environment deployment
+
+Argo CD applications are environment-specific:
+
+- Dev: [gitops/argocd/applications/secure-service-dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-dev.yaml)
+- Prod: [gitops/argocd/applications/secure-service-prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-prod.yaml)
+
+These consume environment values from:
+
+- [gitops/values/dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/dev.yaml)
+- [gitops/values/prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/prod.yaml)
+
+Both applications are configured for automated sync with prune and self-heal enabled.

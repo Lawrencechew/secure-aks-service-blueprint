@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: secure-service-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Lawrencechew/secure-aks-service-blueprint.git
+    targetRevision: master
+    path: helm/secure-service
+    helm:
+      releaseName: secure-service
+      valueFiles:
+        - ../../gitops/values/dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: secure-service-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+

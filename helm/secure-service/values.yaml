@@ -1,7 +1,8 @@
 replicaCount: 2
 image:
   repository: "<your-registry>/secure-aks-service"
-  tag: "latest"
+  tag: "v1.2.3"
+  digest: ""
   pullPolicy: IfNotPresent
 
 service:

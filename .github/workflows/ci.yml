@@ -35,17 +35,12 @@ jobs:
       - name: Build image
         run: |
           docker build -t secure-aks-service:ci .
-      - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v1
-        with:
-          scan-type: fs
-          vuln-type: "os,library"
-          format: 'table'
-      - name: Trivy image scan
-        uses: aquasecurity/trivy-action@v1
-        with:
-          scan-type: image
-          image-ref: secure-aks-service:ci
+      - name: Trivy filesystem scan (blocking)
+        run: |
+          trivy fs --exit-code 1 --severity HIGH,CRITICAL --ignorefile .trivyignore .
+      - name: Trivy image scan (blocking)
+        run: |
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --ignorefile .trivyignore secure-aks-service:ci
       - name: Generate SBOM
         run: trivy image --format cyclonedx -o sbom.xml secure-aks-service:ci
       - name: Upload SBOM
@@ -88,8 +83,21 @@ jobs:
         run: trivy config --exit-code 1 --severity CRITICAL,HIGH infra/terraform
       - name: Helm lint
         run: helm lint helm/secure-service
+  negative-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Trivy CLI
+        uses: aquasecurity/setup-trivy@v0.2.2
+      - name: Verify Trivy gate fails on known-bad fixture
+        run: |
+          if trivy config --exit-code 1 --severity HIGH,CRITICAL platform/negative-tests/trivy; then
+            echo "Expected Trivy to fail for the insecure fixture, but it passed."
+            exit 1
+          fi
   policy-guardrails:
     runs-on: ubuntu-latest
+    needs: negative-gates
     steps:
       - uses: actions/checkout@v4
       - name: Run Kyverno policy tests (blocking)
@@ -108,7 +116,7 @@ jobs:
           docker run --rm --entrypoint promtool -v "${{ github.workspace }}:/work" -w /work prom/prometheus:v2.55.0 test rules platform/sre/prometheus/slo-alert-tests.yaml
       - name: Validate GitOps manifests (blocking)
         run: |
-          docker run --rm -v "${{ github.workspace }}:/work" -w /work ghcr.io/yannh/kubeconform:v0.6.7 -strict -ignore-missing-schemas gitops/argocd/applications/secure-service.yaml
+          docker run --rm -v "${{ github.workspace }}:/work" -w /work ghcr.io/yannh/kubeconform:v0.6.7 -strict -ignore-missing-schemas gitops/argocd/applications/*.yaml
       - name: Ensure Helm renders monitoring resources
         run: |
           docker run --rm -v "${{ github.workspace }}:/work" -w /work alpine/helm:3.16.3 template secure-service helm/secure-service > rendered.yaml
