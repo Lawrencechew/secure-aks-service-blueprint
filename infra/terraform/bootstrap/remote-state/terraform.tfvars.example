@@ -2,4 +2,4 @@ location                    = "eastus"
 resource_group_name         = "rg-sasb-tfstate"
 storage_account_name_prefix = "sasbtfstate"
 container_name              = "tfstate"
-
+allowed_ip_ranges           = ["203.0.113.10/32"] # Replace with your operator IP(s)

@@ -18,6 +18,8 @@ terraform plan
 terraform apply
 ```
 
+Set `allowed_ip_ranges` in `terraform.tfvars` to your operator CIDR (for example `x.x.x.x/32`) so storage firewall default-deny still permits bootstrap access.
+
 Then copy [dev/backend.hcl.example](../infra/terraform/environments/dev/backend.hcl.example) or [prod/backend.hcl.example](../infra/terraform/environments/prod/backend.hcl.example) to `backend.hcl` and fill the storage account details from bootstrap outputs.
 
 ## 2) Environment plan/apply (example: dev)

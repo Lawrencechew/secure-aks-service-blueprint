@@ -18,8 +18,13 @@ variable "container_name" {
   default = "tfstate"
 }
 
+variable "allowed_ip_ranges" {
+  type        = list(string)
+  default     = []
+  description = "CIDR ranges allowed to access the state storage account (for example your public IP /32)."
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
 }
-
