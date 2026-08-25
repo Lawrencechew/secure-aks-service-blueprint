@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff pytest
+          pip install -r requirements.txt
       - name: Validate vulnerability exception governance
         run: python scripts/validate_vulnerability_exceptions.py
       - name: Ruff check
@@ -34,7 +34,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Set up Trivy CLI
-        uses: aquasecurity/setup-trivy@v0.2.2
+        uses: aquasecurity/setup-trivy@v0.3.1
       - name: Build image
         run: |
           docker build -t secure-aks-service:ci .
@@ -71,7 +71,7 @@ jobs:
         with:
           version: v3.16.3
       - name: Set up Trivy CLI
-        uses: aquasecurity/setup-trivy@v0.2.2
+        uses: aquasecurity/setup-trivy@v0.3.1
       - name: Terraform fmt (blocking)
         run: terraform -chdir=infra/terraform fmt -check -recursive
       - name: Terraform init without backend (blocking)
@@ -91,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Trivy CLI
-        uses: aquasecurity/setup-trivy@v0.2.2
+        uses: aquasecurity/setup-trivy@v0.3.1
       - name: Verify Trivy gate fails on known-bad fixture
         run: |
           if trivy config --exit-code 1 --severity HIGH,CRITICAL platform/negative-tests/trivy; then
