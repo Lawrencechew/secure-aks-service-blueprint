@@ -4,8 +4,8 @@ This section describes how to deploy the blueprint to Azure for testing. The rep
 
 Quick notes:
 
-- Terraform is environment-composed under [infra/terraform/environments/](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments).
-- Remote state bootstrap is separated into [infra/terraform/bootstrap/remote-state](/C:/Dev/secure-aks-service-blueprint/infra/terraform/bootstrap/remote-state).
+- Terraform is environment-composed under [infra/terraform/environments/](../infra/terraform/environments/).
+- Remote state bootstrap is separated into [infra/terraform/bootstrap/remote-state](../infra/terraform/bootstrap/remote-state).
 - No backend credentials or secrets are committed.
 
 ## 1) Bootstrap remote state (one-time per subscription)
@@ -18,7 +18,7 @@ terraform plan
 terraform apply
 ```
 
-Then copy [backend.hcl.example](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/dev/backend.hcl.example) or [backend.hcl.example](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/prod/backend.hcl.example) to `backend.hcl` and fill the storage account details from bootstrap outputs.
+Then copy [dev/backend.hcl.example](../infra/terraform/environments/dev/backend.hcl.example) or [prod/backend.hcl.example](../infra/terraform/environments/prod/backend.hcl.example) to `backend.hcl` and fill the storage account details from bootstrap outputs.
 
 ## 2) Environment plan/apply (example: dev)
 
@@ -45,18 +45,18 @@ For immutable deployment artifacts, set:
 
 Prefer digest pinning over mutable tag-only references for promoted environments.
 
-Deployment via GitHub Actions should use OIDC federation (no client secret). See [.github/workflows/infra-oidc.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/infra-oidc.yml).
+Deployment via GitHub Actions should use OIDC federation (no client secret). See [infra-oidc.yml](../.github/workflows/infra-oidc.yml).
 
 ## 4) GitOps environment deployment
 
 Argo CD applications are environment-specific:
 
-- Dev: [gitops/argocd/applications/secure-service-dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-dev.yaml)
-- Prod: [gitops/argocd/applications/secure-service-prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-prod.yaml)
+- Dev: [gitops/argocd/applications/secure-service-dev.yaml](../gitops/argocd/applications/secure-service-dev.yaml)
+- Prod: [gitops/argocd/applications/secure-service-prod.yaml](../gitops/argocd/applications/secure-service-prod.yaml)
 
 These consume environment values from:
 
-- [gitops/values/dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/dev.yaml)
-- [gitops/values/prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/prod.yaml)
+- [gitops/values/dev.yaml](../gitops/values/dev.yaml)
+- [gitops/values/prod.yaml](../gitops/values/prod.yaml)
 
 Both applications are configured for automated sync with prune and self-heal enabled.

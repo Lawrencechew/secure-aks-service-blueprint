@@ -30,8 +30,10 @@ Implemented controls (phase 4 hardening):
 - CI emits a CycloneDX SBOM artifact for the built image.
 - CI includes a negative-gate check that ensures a known insecure manifest fails Trivy policy evaluation.
 - Vulnerability exceptions are explicit and time-bound:
-  - Technical allowlist: [.trivyignore](/C:/Dev/secure-aks-service-blueprint/.trivyignore)
-  - Governance record: [security/vulnerability-exceptions.yaml](/C:/Dev/secure-aks-service-blueprint/security/vulnerability-exceptions.yaml)
+  - Technical allowlist: [../.trivyignore](../.trivyignore)
+  - Governance record: [security/vulnerability-exceptions.yaml](../security/vulnerability-exceptions.yaml)
+  - Expiry enforcement: [scripts/validate_vulnerability_exceptions.py](../scripts/validate_vulnerability_exceptions.py)
+  - Governance is grouped by scan scope (image/filesystem), not individual per-CVE acceptances.
 - GitOps manifests are split by environment with automated sync, prune, and self-heal.
 - Helm supports immutable image references (`repository@sha256:digest`) via `image.digest`.
 
@@ -45,4 +47,4 @@ Controls to add in production:
 
 Notes:
 - The Terraform examples do not provision network controls or private endpoints — these are out of scope for the reference blueprint.
-- Live Azure apply remains a protected/manual step in [.github/workflows/infra-oidc.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/infra-oidc.yml).
+- Live Azure apply remains a protected/manual step in [infra-oidc.yml](../.github/workflows/infra-oidc.yml).

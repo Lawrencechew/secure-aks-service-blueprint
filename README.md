@@ -1,100 +1,123 @@
-# secure-aks-service-blueprint
+# Secure AKS Service Blueprint
 
-Production-oriented AKS service blueprint demonstrating secure CI/CD, workload identity, observability and software supply-chain practices.
+Secure-by-default AKS reference platform demonstrating infrastructure as code, cloud/workload identity, policy enforcement, GitOps reconciliation, reliability engineering, and software supply-chain controls.
 
-## Terraform v2 (Phase 1)
+## What this demonstrates
 
-Infrastructure code is organized under [infra/terraform/](/C:/Dev/secure-aks-service-blueprint/infra/terraform):
+| Capability | Implementation |
+| --- | --- |
+| Modular AKS Terraform | `infra/terraform/modules/*` composed by `environments/dev` and `environments/prod` |
+| Azure Workload Identity | AKS OIDC issuer + federated identity credential for Kubernetes ServiceAccount subject |
+| Key Vault access without app secrets | UAMI with `Key Vault Secrets User`, no app-level secret injection |
+| ACR least-privilege pull path | AKS kubelet identity granted `AcrPull` |
+| Kyverno admission guardrails | Runtime, supply-chain, and workload-contract policies |
+| Secure workload contract | Required labels, probes, service account, and runtime controls |
+| Prometheus SLO / burn-rate alerts | Recording rules + multi-window alert tests via promtool |
+| GitOps reconciliation | Argo CD Application manifests for dev/prod with automated prune + self-heal |
+| HIGH/CRITICAL vulnerability blocking | Trivy fs/image blocking gates in CI |
+| CycloneDX SBOM generation | `sbom.xml` artifact generated in CI |
+| Digest-pinned deployment | Helm supports `image.repository@sha256:digest` via `image.digest` |
+| Tested negative security cases | Known-bad fixture must fail Trivy config gate |
 
-- Reusable modules: [modules/](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules)
-- Environment composition roots: [environments/dev](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/dev), [environments/prod](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/prod)
-- Remote-state bootstrap: [bootstrap/remote-state](/C:/Dev/secure-aks-service-blueprint/infra/terraform/bootstrap/remote-state)
+## Architecture overview
 
-Each environment composes the same modules for:
+```mermaid
+flowchart TD
+    GH[GitHub Actions CI] --> TF[Terraform Platform Definition]
+    GH --> GITOPS[GitOps Manifests]
+    TF --> AKS[AKS Cluster]
+    TF --> ACR[Azure Container Registry]
+    TF --> KV[Azure Key Vault]
+    AKS --> APP[Application Workloads]
+    APP --> WI[Workload Identity]
+    WI --> KV
+    APP --> PROM[Prometheus Rules and Metrics]
+    GITOPS --> ARGO[Argo CD Reconciliation]
+    ARGO --> AKS
+    KYV[Kyverno Guardrails] --> AKS
+```
 
-- Resource Group
-- ACR
-- AKS (OIDC issuer + Workload Identity enabled)
-- Key Vault
-- User Assigned Managed Identity + federated identity credential
-- Azure RBAC assignments for AcrPull and Key Vault secret reads
+More detail: [docs/architecture.md](docs/architecture.md)
 
-## Workload Identity wiring
+## Security controls
 
-Terraform federates a Kubernetes ServiceAccount subject:
+| Area | Control | Enforcement |
+| --- | --- | --- |
+| Identity | Azure Workload Identity | Terraform + Kubernetes ServiceAccount subject contract |
+| Secrets | Key Vault read via managed identity | Azure RBAC (`Key Vault Secrets User`) |
+| Images | Approved registry | Kyverno supply-chain policy |
+| Images | No `:latest` | Kyverno supply-chain policy |
+| Containers | Non-root, RO filesystem, dropped caps | Kyverno runtime policy + Helm defaults |
+| Supply chain | HIGH/CRITICAL vulnerability gate | Trivy fs/image blocking CI steps |
+| Supply chain | SBOM generation | Trivy CycloneDX artifact in CI |
+| Reliability | SLO and burn-rate alerts | Prometheus rules + promtool tests |
+| Delivery | Desired-state reconciliation | Argo CD automated sync/prune/self-heal |
 
-`system:serviceaccount:<namespace>:<serviceAccountName>`
+## Implemented vs deferred
 
-with the User Assigned Managed Identity. Keep Helm and Terraform aligned by setting:
+### Implemented and locally/CI validated
 
-- Terraform: `k8s_namespace`, `k8s_service_account_name`
-- Helm: `workloadIdentity.enabled=true`, `workloadIdentity.serviceAccountName=<same-name>`, `workloadIdentity.clientID=<terraform output>`
+- Terraform implementation for AKS/ACR/Key Vault/identity wiring
+- GitHub OIDC workflow definition for infrastructure plan/apply
+- Kyverno policies with compliant and violating test fixtures
+- GitOps manifests and environment-specific values
+- Trivy vulnerability gates + SBOM + exception governance validation
+- Prometheus SLO rule checks and alert-behavior tests
 
-## CI and infrastructure validation
+### Live Azure acceptance deferred
 
-[.github/workflows/ci.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/ci.yml) runs blocking checks for:
+Live Azure acceptance is intentionally deferred to optional final portfolio validation:
 
-- `terraform fmt -check`
-- `terraform init -backend=false`
-- `terraform validate`
-- `tflint`
-- `trivy config`
-- `helm lint`
+- GitHub OIDC -> Azure authentication proof
+- Terraform live apply
+- AKS cluster creation proof
+- Live kubelet pull from ACR
+- Live Workload Identity -> Key Vault secret access
 
-The OIDC plan/apply design is implemented in [.github/workflows/infra-oidc.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/infra-oidc.yml):
+Deferred does **not** mean the design is failed; it means live-cloud execution is out of scope for standard repository CI.
 
-- Pull requests: OIDC-authenticated Terraform `plan`
-- Manual/protected execution: Terraform `apply` via `workflow_dispatch`
+## Repository structure
 
-See [docs/deployment.md](/C:/Dev/secure-aks-service-blueprint/docs/deployment.md) and [docs/security.md](/C:/Dev/secure-aks-service-blueprint/docs/security.md) for run procedures and security details.
+- [infra/terraform/](infra/terraform/) - Terraform modules, environment roots, and state bootstrap
+- [platform/policies/](platform/policies/) - Kyverno policy packs and tests
+- [platform/workload-contract/](platform/workload-contract/) - Workload contract expectations
+- [platform/sre/prometheus/](platform/sre/prometheus/) - SLO recording and alerting rules/tests
+- [gitops/](gitops/) - Argo CD applications and environment values
+- [security/](security/) - Vulnerability exception governance record
+- [examples/](examples/) - Compliant and violating manifest fixtures
+- [tests/](tests/) - Python unit/integration tests
+- [docs/](docs/) - Architecture, security, deployment, runbook, and ADRs
 
-## Policy guardrails and workload contract (Phase 2)
+## Local / CI validation
 
-Kyverno-based policy-as-code is implemented under [platform/policies/](/C:/Dev/secure-aks-service-blueprint/platform/policies):
+The standard validation path requires no Azure credentials:
 
-- Baseline runtime hardening policies
-- Supply-chain image policies
-- Workload contract enforcement policies
+```bash
+python -m ruff check .
+python -m pytest -q
+python scripts/validate_vulnerability_exceptions.py
+terraform -chdir=infra/terraform fmt -check -recursive
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+tflint --chdir=infra/terraform/environments/dev --init --config=../../.tflint.hcl
+tflint --chdir=infra/terraform/environments/dev --config=../../.tflint.hcl
+trivy config --exit-code 1 --severity HIGH,CRITICAL infra/terraform
+docker build -t secure-aks-service:ci .
+trivy fs --exit-code 1 --severity HIGH,CRITICAL --ignorefile .trivyignore .
+trivy image --exit-code 1 --severity HIGH,CRITICAL --ignorefile .trivyignore secure-aks-service:ci
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/kyverno/kyverno-cli:v1.12.6 test platform/policies/tests
+docker run --rm --entrypoint promtool -v "$PWD:/work" -w /work prom/prometheus:v2.55.0 check rules platform/sre/prometheus/slo-rules.yaml
+docker run --rm --entrypoint promtool -v "$PWD:/work" -w /work prom/prometheus:v2.55.0 test rules platform/sre/prometheus/slo-alert-tests.yaml
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/yannh/kubeconform:v0.6.7 -strict -ignore-missing-schemas gitops/argocd/applications/*.yaml
+```
 
-Reference manifests for local policy verification are provided in:
+For optional live Azure validation, see [docs/deployment.md](docs/deployment.md) and [docs/demo-guide.md](docs/demo-guide.md).
 
-- [examples/compliant/](/C:/Dev/secure-aks-service-blueprint/examples/compliant)
-- [examples/violations/](/C:/Dev/secure-aks-service-blueprint/examples/violations)
+## Key documentation
 
-The implementation-focused workload contract is documented at [platform/workload-contract/README.md](/C:/Dev/secure-aks-service-blueprint/platform/workload-contract/README.md).
-
-## SRE SLIs, SLOs, and burn-rate alerting (Phase 3)
-
-Phase 3 SRE artifacts:
-
-- SRE model and exact SLI/SLO PromQL: [docs/sre-phase3.md](/C:/Dev/secure-aks-service-blueprint/docs/sre-phase3.md)
-- Reliability runbook: [docs/reliability-runbook.md](/C:/Dev/secure-aks-service-blueprint/docs/reliability-runbook.md)
-- Reliability drills and rollback model: [docs/reliability-drills.md](/C:/Dev/secure-aks-service-blueprint/docs/reliability-drills.md)
-- Recording/alerting rules: [platform/sre/prometheus/slo-rules.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-rules.yaml)
-- Prometheus rule tests: [platform/sre/prometheus/slo-alert-tests.yaml](/C:/Dev/secure-aks-service-blueprint/platform/sre/prometheus/slo-alert-tests.yaml)
-
-## Phase 4 hardening and closeout
-
-### GitOps environment authority
-
-- Environment applications: [gitops/argocd/applications/secure-service-dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-dev.yaml), [gitops/argocd/applications/secure-service-prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-prod.yaml)
-- Environment values: [gitops/values/dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/dev.yaml), [gitops/values/prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/prod.yaml)
-- Sync behavior: automated reconcile with prune + self-heal enabled.
-
-### Supply chain policy hardening
-
-- Blocking vulnerability gates for Trivy filesystem and image scans at HIGH/CRITICAL severity in [.github/workflows/ci.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/ci.yml)
-- SBOM generation remains a mandatory CI artifact (`sbom.xml`, CycloneDX)
-- Negative gate demonstration: CI intentionally verifies that [platform/negative-tests/trivy/insecure-deployment.yaml](/C:/Dev/secure-aks-service-blueprint/platform/negative-tests/trivy/insecure-deployment.yaml) is rejected by Trivy.
-- Exception mechanism:
-  - Technical allowlist: [.trivyignore](/C:/Dev/secure-aks-service-blueprint/.trivyignore)
-  - Review policy: [security/vulnerability-exceptions.yaml](/C:/Dev/secure-aks-service-blueprint/security/vulnerability-exceptions.yaml)
-
-### Immutable image support
-
-- Helm chart supports digest-pinned images (`repository@sha256:digest`) via `image.digest` in [helm/secure-service/values.yaml](/C:/Dev/secure-aks-service-blueprint/helm/secure-service/values.yaml).
-
-### Decision records and operations guide
-
-- ADRs: [docs/adr/](/C:/Dev/secure-aks-service-blueprint/docs/adr)
-- Demo/operations flow: [docs/demo-guide.md](/C:/Dev/secure-aks-service-blueprint/docs/demo-guide.md)
+- [docs/architecture.md](docs/architecture.md)
+- [docs/security.md](docs/security.md)
+- [docs/deployment.md](docs/deployment.md)
+- [docs/demo-guide.md](docs/demo-guide.md)
+- [docs/reliability-runbook.md](docs/reliability-runbook.md)
+- [docs/adr/](docs/adr/)

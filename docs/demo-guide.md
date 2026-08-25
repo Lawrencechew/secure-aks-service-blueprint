@@ -11,7 +11,7 @@ Show the end-to-end blueprint flow with clear separation between local/static va
 5. Run build checks (`docker build`, blocking Trivy fs/image scans, SBOM generation).
 
 ## Live Azure acceptance walkthrough
-1. Trigger OIDC Terraform `plan` using [infra-oidc.yml](/C:/Dev/secure-aks-service-blueprint/.github/workflows/infra-oidc.yml).
+1. Trigger OIDC Terraform `plan` using [infra-oidc.yml](../.github/workflows/infra-oidc.yml).
 2. Trigger protected/manual `apply`.
 3. Verify AKS cluster exists.
 4. Verify kubelet can pull from ACR.

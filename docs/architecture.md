@@ -14,19 +14,19 @@ High-level components:
 
 Terraform v2 structure:
 
-- [infra/terraform/modules/resource-group](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules/resource-group)
-- [infra/terraform/modules/acr](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules/acr)
-- [infra/terraform/modules/aks](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules/aks)
-- [infra/terraform/modules/key-vault](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules/key-vault)
-- [infra/terraform/modules/identity](/C:/Dev/secure-aks-service-blueprint/infra/terraform/modules/identity)
-- [infra/terraform/environments/dev](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/dev) and [infra/terraform/environments/prod](/C:/Dev/secure-aks-service-blueprint/infra/terraform/environments/prod) compose the same modules with environment-specific sizing/names/tags.
+- [infra/terraform/modules/resource-group](../infra/terraform/modules/resource-group)
+- [infra/terraform/modules/acr](../infra/terraform/modules/acr)
+- [infra/terraform/modules/aks](../infra/terraform/modules/aks)
+- [infra/terraform/modules/key-vault](../infra/terraform/modules/key-vault)
+- [infra/terraform/modules/identity](../infra/terraform/modules/identity)
+- [infra/terraform/environments/dev](../infra/terraform/environments/dev) and [infra/terraform/environments/prod](../infra/terraform/environments/prod) compose the same modules with environment-specific sizing/names/tags.
 
 GitOps environment split:
 
-- [gitops/argocd/applications/secure-service-dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-dev.yaml)
-- [gitops/argocd/applications/secure-service-prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/argocd/applications/secure-service-prod.yaml)
-- [gitops/values/dev.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/dev.yaml)
-- [gitops/values/prod.yaml](/C:/Dev/secure-aks-service-blueprint/gitops/values/prod.yaml)
+- [gitops/argocd/applications/secure-service-dev.yaml](../gitops/argocd/applications/secure-service-dev.yaml)
+- [gitops/argocd/applications/secure-service-prod.yaml](../gitops/argocd/applications/secure-service-prod.yaml)
+- [gitops/values/dev.yaml](../gitops/values/dev.yaml)
+- [gitops/values/prod.yaml](../gitops/values/prod.yaml)
 
 Workload identity and RBAC path:
 
