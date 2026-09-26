@@ -1,4 +1,6 @@
-# Secure AKS Service Blueprint
+# Breakwater
+
+_Secure AKS Platform Blueprint_
 
 Secure-by-default AKS reference platform demonstrating infrastructure as code, cloud/workload identity, policy enforcement, GitOps reconciliation, reliability engineering, and software supply-chain controls.
 
@@ -121,3 +123,5 @@ For optional live Azure validation, see [docs/deployment.md](docs/deployment.md)
 - [docs/demo-guide.md](docs/demo-guide.md)
 - [docs/reliability-runbook.md](docs/reliability-runbook.md)
 - [docs/adr/](docs/adr/)
+- [RELEASE_READINESS_V1.md](RELEASE_READINESS_V1.md)
+- [RENAME_CHECKLIST.md](RENAME_CHECKLIST.md)

@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Lawrencechew/secure-aks-service-blueprint.git
+    repoURL: https://github.com/Lawrencechew/breakwater.git
     targetRevision: master
     path: helm/secure-service
     helm:
@@ -22,4 +22,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-

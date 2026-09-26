@@ -1,5 +1,5 @@
 apiVersion: v2
 name: secure-service
-description: Secure service Helm chart for secure-aks-service-blueprint
-version: 0.1.0
-appVersion: "0.1.0"
+description: Secure service Helm chart for Breakwater
+version: 1.0.0
+appVersion: "1.0.0"

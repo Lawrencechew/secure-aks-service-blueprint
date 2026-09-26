@@ -11,6 +11,8 @@ Dockerfile*
 __pycache__/
 .terraform/
 .terraform.lock.hcl
+**/.terraform/
+**/.terraform.lock.hcl
 .vscode/
 .idea/
 *.log

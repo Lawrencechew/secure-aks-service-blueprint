@@ -1,5 +1,4 @@
-resource_group_name  = "rg-sasb-tfstate"
-storage_account_name = "sasbtfstatexxxxx"
+resource_group_name  = "rg-breakwater-tfstate"
+storage_account_name = "breakwatertfstatexxxxx"
 container_name       = "tfstate"
-key                  = "secure-aks-service-blueprint/dev.tfstate"
-
+key                  = "breakwater/dev.tfstate"

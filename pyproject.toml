@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "secure-aks-service-blueprint"
-version = "0.1.0"
-description = "Reference AKS service blueprint"
+name = "breakwater"
+version = "1.0.0"
+description = "Breakwater — Secure AKS Platform Blueprint"
 
 [tool.poetry.dependencies]
 python = "^3.13"
